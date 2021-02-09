@@ -1,0 +1,40 @@
+{
+  "name": "svelte-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build-client": "rollup -c",
+    "watch-client": "rollup -c -w",
+    "dev": "concurrently -n server,client \"npm run watch-server\" \"npm run watch-client\"",
+    "start-server": "ts-node server.ts",
+    "watch-server": "ts-node-dev server.ts",
+    "start": "npm run build-client && npm run start-server",
+    "validate": "svelte-check"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-typescript": "^6.0.0",
+    "@tsconfig/svelte": "^1.0.0",
+    "@types/node": "^14.14.25",
+    "concurrently": "^5.3.0",
+    "rollup": "^2.3.4",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-svelte": "^7.0.0",
+    "rollup-plugin-terser": "^7.0.0",
+    "svelte": "^3.0.0",
+    "svelte-check": "^1.0.0",
+    "svelte-preprocess": "^4.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.3"
+  },
+  "dependencies": {
+    "@types/express": "^4.17.11",
+    "express": "^4.17.1",
+    "immutable": "^4.0.0-rc.12",
+    "socket.io": "^3.1.1",
+    "socket.io-client": "^3.1.1",
+    "ts-node": "^9.1.1",
+    "ts-node-dev": "^1.1.1"
+  }
+}
