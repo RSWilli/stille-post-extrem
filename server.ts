@@ -79,6 +79,9 @@ io.on("connection", (socket: Socket) => {
     })
 })
 
+/**
+ * server stuff: 
+ */
 app.use(express.static('public'))
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"))
@@ -87,6 +90,9 @@ server.listen(port, () => {
     console.log(`App listening on ${port}`)
 })
 
+/**
+ * kill all rooms on exit
+ */
 process.on("exit", () => {
     console.log("deleting rooms")
     io.emit("quit")
