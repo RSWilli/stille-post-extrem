@@ -15,7 +15,7 @@ const genRand = () => randomBytes(5).toString("hex");
 io.on("connection", (socket: Socket) => {
     let isMaster = false
     let room: string
-    socket.on("createroom", () => {
+    socket.on("createroom", (username: string) => {
         if (!room) {
             console.log("creating room");
 
@@ -24,6 +24,7 @@ io.on("connection", (socket: Socket) => {
             socket.join(room)
 
             socket.emit("master", room)
+            io.in(room).emit("join", username, socket.id)
             isMaster = true
         }
     })
@@ -34,11 +35,43 @@ io.on("connection", (socket: Socket) => {
                 return
             }
 
-            socket.join(room)
-            room = roomID
+            console.log(socket.id)
 
-            socket.to(room).emit("join", username, socket.id)
+            console.log(io.sockets.adapter.rooms)
+
+            room = roomID
+            socket.join(room)
+
+            console.log(io.sockets.adapter.rooms)
+
+            socket.emit("joined", username, room)
+            io.in(room).emit("join", username, socket.id)
         }
+    })
+
+    socket.on("leaveroom", () => {
+        if (room) {
+            if (isMaster) {
+                io.in(room).emit("quit")
+            } else {
+                io.in(room).emit("leave", socket.id)
+            }
+        }
+        socket.emit("quit")
+    })
+
+    socket.on("disconnect", () => {
+        if (room) {
+            if (isMaster) {
+                io.in(room).emit("quit")
+            } else {
+                io.in(room).emit("leave", socket.id)
+            }
+        }
+    })
+
+    socket.on("info", (...args) => {
+        io.in(room).emit("info", ...args)
     })
 
     socket.onAny((event: string, ...args) => {
@@ -52,4 +85,9 @@ app.get('/', (req, res) => {
 })
 server.listen(port, () => {
     console.log(`App listening on ${port}`)
+})
+
+process.on("exit", () => {
+    console.log("deleting rooms")
+    io.emit("quit")
 })

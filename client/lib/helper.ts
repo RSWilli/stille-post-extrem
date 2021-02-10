@@ -1,12 +1,14 @@
-import { Readable, writable, Writable } from "svelte/store";
+import { Readable, writable, Writable } from "svelte/store"
 
-type Updater<T> = (update: Writable<T>["update"]) => void
-
-export const updatable = <T>(value: T, updater: Updater<T>): Readable<T> => {
+export const customStore = <V>(value: V, changeFn: (store: Writable<V>) => void): Readable<V> => {
     const store = writable(value)
 
-    updater(store.update)
+    changeFn(store)
 
+    return readonly(store)
+}
+
+export const readonly = <T>(store: Readable<T> | Writable<T>): Readable<T> => {
     return {
         subscribe: store.subscribe
     }

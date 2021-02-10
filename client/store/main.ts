@@ -1,56 +1,76 @@
-import { derived, readable } from "svelte/store";
+import { derived, get } from "svelte/store";
 import { socket } from "../com/socket";
 import { Map } from "immutable";
-import { updatable } from "../lib/helper";
+import { customStore } from "../lib/helper";
 
-export const isMaster = readable<boolean>(false, set => {
-    socket.on("master", (id: string) => {
-        console.log(id);
-        set(true)
-    })
-    socket.on("gameend", () => {
-        set(false)
-    })
-})
-
-export const currentRoom = readable<string | undefined>(undefined, set => {
-    socket.on("master", (id: string) => {
-        set(id)
-    })
-    socket.on("leave", () => {
-        set(undefined)
-    })
-})
-
-export const isInLobby = readable<boolean>(false, set => {
+export const isMaster = customStore(false, store => {
     socket.on("master", () => {
-        set(true)
-    })
-    socket.on("leave", () => {
-        set(false)
-    })
-})
-
-export const isGameStarted = readable<boolean>(false, set => {
-    socket.on("gamestart", () => {
-        set(true)
+        store.set(true)
     })
     socket.on("gameend", () => {
-        set(false)
+        store.set(false)
+    })
+    socket.on("quit", () => {
+        store.set(false)
     })
 })
 
-export const users = updatable<Map<string, string>>(Map(), update => {
+export const currentRoom = customStore<string | undefined>(undefined, (store) => {
+
+    socket.on("master", (id: string) => {
+        store.set(id)
+    })
+    socket.on("joined", (username: string, roomid: string) => {
+        store.set(roomid)
+    })
+    socket.on("quit", () => {
+        store.set(undefined)
+    })
+})
+
+export const isInLobby = customStore(false, store => {
+    socket.on("master", () => {
+        store.set(true)
+    })
+    socket.on("joined", () => {
+        store.set(true)
+    })
+    socket.on("quit", () => {
+        store.set(false)
+    })
+})
+
+export const isGameStarted = customStore(false, store => {
+    socket.on("gamestart", () => {
+        store.set(true)
+    })
+    socket.on("gameend", () => {
+        store.set(false)
+    })
+    socket.on("quit", () => {
+        store.set(false)
+    })
+})
+
+export const users = customStore(Map<string, string>(), store => {
+
+    socket.on("joined", (username: string) => {
+        store.update(list => list.set(socket.id, username))
+    })
+    socket.on("info", (username: string, sid: string) => {
+        store.update(list => list.set(sid, username))
+    })
     socket.on("join", (username: string, sid: string) => {
-        update(list => list.set(sid, username))
+        store.update(list => list.set(sid, username))
+
+        socket.emit("info", get(store).get(socket.id), socket.id)
+    })
+    socket.on("leave", (sid: string) => {
+        store.update(list => list.delete(sid))
+    })
+    socket.on("quit", () => {
+        store.set(Map())
     })
 })
 
 export const userList = derived(users, v => Array.from(v.values()))
-
-export const initialSocketListenerSetup = derived([
-    isMaster,
-    isGameStarted,
-    currentRoom,
-    isInLobby
-], () => "")
