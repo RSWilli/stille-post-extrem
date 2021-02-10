@@ -1,14 +1,15 @@
 <script lang="ts">
     import { leaveRoom } from "./com/socket";
 
-    import { currentRoom, isMaster, userList } from "./store/main";
+    import { currentRoom, userList } from "./store/main";
 </script>
 
 <span>Started Game</span>
 
 <span>{$currentRoom}</span>
-<span>{$isMaster}</span>
 
-<span>{$userList}</span>
+{#each $userList as user}
+    <span>{user}</span>
+{/each}
 
 <button on:click={() => leaveRoom()}>Leave Room</button>

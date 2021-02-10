@@ -88,4 +88,16 @@ export const users = customStore(Map<string, string>(), store => {
     })
 })
 
-export const userList = derived(users, v => Array.from(v.values()))
+export const userList = derived(users, v => {
+    console.log(Array.from(v.keys()))
+
+    return Array.from(v.values())
+})
+
+export const userOrder = derived(users, v => {
+    const entries = v.keySeq().sort()
+
+    console.log(entries)
+
+    return entries
+})
