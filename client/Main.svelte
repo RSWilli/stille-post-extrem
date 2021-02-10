@@ -1,11 +1,12 @@
 <script lang="ts">
     import { createRoom, joinRoom } from "./com/socket";
+    import {} from "svelma";
 
     let username: string;
     let room: string;
 </script>
 
-<div>
+<div class="box">
     <input bind:value={username} type="text" placeholder="Username" />
     <div>
         <button on:click={() => createRoom(username)}>Create Room</button>
@@ -16,3 +17,6 @@
         <button on:click={() => joinRoom(username, room)}>Join Room</button>
     </div>
 </div>
+
+<style lang="scss">
+</style>
