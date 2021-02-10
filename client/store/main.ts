@@ -13,6 +13,9 @@ export const isMaster = customStore(false, store => {
     socket.on("quit", () => {
         store.set(false)
     })
+    socket.on("disconnect", () => {
+        store.set(false)
+    })
 })
 
 export const currentRoom = customStore<string | undefined>(undefined, (store) => {
@@ -24,6 +27,9 @@ export const currentRoom = customStore<string | undefined>(undefined, (store) =>
         store.set(roomid)
     })
     socket.on("quit", () => {
+        store.set(undefined)
+    })
+    socket.on("disconnect", () => {
         store.set(undefined)
     })
 })
@@ -38,6 +44,9 @@ export const isInLobby = customStore(false, store => {
     socket.on("quit", () => {
         store.set(false)
     })
+    socket.on("disconnect", () => {
+        store.set(false)
+    })
 })
 
 export const isGameStarted = customStore(false, store => {
@@ -48,6 +57,9 @@ export const isGameStarted = customStore(false, store => {
         store.set(false)
     })
     socket.on("quit", () => {
+        store.set(false)
+    })
+    socket.on("disconnect", () => {
         store.set(false)
     })
 })
@@ -69,6 +81,9 @@ export const users = customStore(Map<string, string>(), store => {
         store.update(list => list.delete(sid))
     })
     socket.on("quit", () => {
+        store.set(Map())
+    })
+    socket.on("disconnect", () => {
         store.set(Map())
     })
 })

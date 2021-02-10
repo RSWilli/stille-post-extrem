@@ -89,11 +89,3 @@ app.get('/', (req, res) => {
 server.listen(port, () => {
     console.log(`App listening on ${port}`)
 })
-
-/**
- * kill all rooms on exit
- */
-process.on("exit", () => {
-    console.log("deleting rooms")
-    io.emit("quit")
-})
