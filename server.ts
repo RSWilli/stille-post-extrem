@@ -30,7 +30,7 @@ io.on("connection", (socket: Socket) => {
     })
 
     socket.on("joinroom", (username?: string, roomID?: string) => {
-        if (!isMaster && roomID && roomID.length == 10) {
+        if (!isMaster && username && roomID && roomID.length == 10) {
             if (!io.sockets.adapter.rooms.has(roomID)) {
                 return
             }
