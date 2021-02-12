@@ -4,7 +4,7 @@
   "scripts": {
     "build-client": "rollup -c",
     "watch-client": "rollup -c -w",
-    "dev": "concurrently -n server,client \"npm run watch-server\" \"npm run watch-client\"",
+    "dev": "concurrently -k -n server,client \"npm run watch-server\" \"npm run watch-client\"",
     "start-server": "ts-node server.ts",
     "watch-server": "ts-node-dev server.ts",
     "start": "npm run build-client && npm run start-server",
@@ -29,6 +29,7 @@
     "typescript": "^3.9.3"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.2",
     "@types/express": "^4.17.11",
     "bulma": "^0.9.2",
     "express": "^4.17.1",

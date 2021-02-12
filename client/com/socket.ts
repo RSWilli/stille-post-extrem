@@ -13,3 +13,7 @@ export const joinRoom = (username: string, room: string) => {
 export const leaveRoom = () => {
     socket.emit("leaveroom")
 }
+
+export const startGame = () => {
+    socket.emit("gamestart")
+}

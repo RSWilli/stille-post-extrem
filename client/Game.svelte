@@ -1,15 +1,87 @@
 <script lang="ts">
-    import { leaveRoom } from "./com/socket";
+    import { leaveRoom, startGame } from "./com/socket";
+    import Draw from "./Draw.svelte";
 
-    import { currentRoom, userList } from "./store/main";
+    import {
+        currentRoom,
+        isGameStarted,
+        isMaster,
+        userList,
+    } from "./store/main";
+
+    let getData: () => string;
 </script>
 
-<span>Started Game</span>
+<div id="container">
+    <h1 class="title is-1 has-text-centered">Stille Post Extrem</h1>
+    <span class="room is-size-5 is-align-self-center"
+        >Room ID: {$currentRoom}</span
+    >
+    <button
+        on:click={() => leaveRoom()}
+        class="button leave is-small is-align-self-center"
+    >
+        <span class="icon is-small">
+            <i class="fas fa-sign-out-alt" />
+        </span>
+    </button>
+    <aside class="content">
+        <ul>
+            {#each $userList as user}
+                <li>{user}</li>
+            {/each}
+        </ul>
+    </aside>
+    {#if !$isGameStarted}
+        <main
+            class="is-flex is-align-items-center is-justify-content-center is-flex-direction-column"
+        >
+            <h1>No Game Started</h1>
+            {#if $isMaster}
+                <button
+                    on:click={() => startGame()}
+                    class="button is-success my-1">Start Game</button
+                >
+            {/if}
+        </main>
+    {:else}
+        <main
+            class="is-flex is-flex-direction-column is-justify-content-stretch"
+        >
+            <Draw bind:getImageData={getData} />
+        </main>
+    {/if}
+</div>
 
-<span>{$currentRoom}</span>
+<style lang="scss">
+    #container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: 3rem 2rem 1fr;
+        grid-template-columns: auto 1fr 80px;
+        grid-template-areas:
+            "room header leave"
+            "userlist main main"
+            "userlist main main";
+    }
 
-{#each $userList as user}
-    <span>{user}</span>
-{/each}
+    aside {
+        grid-area: userlist;
+        border-right: 1px solid #ccc;
+    }
+    h1 {
+        grid-area: header;
+    }
+    .room {
+        grid-area: room;
+    }
+    .leave {
+        grid-area: leave;
+    }
 
-<button on:click={() => leaveRoom()}>Leave Room</button>
+    main {
+        grid-area: main;
+    }
+</style>

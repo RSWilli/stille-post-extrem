@@ -1,5 +1,5 @@
 import express from 'express'
-import path from 'path'
+import path, { dirname } from 'path'
 import { Server as SocketIO, Socket } from "socket.io";
 import { createServer } from "http";
 import { randomBytes } from 'crypto';
@@ -15,8 +15,8 @@ const genRand = () => randomBytes(5).toString("hex");
 io.on("connection", (socket: Socket) => {
     let isMaster = false
     let room: string
-    socket.on("createroom", (username: string) => {
-        if (!room) {
+    socket.on("createroom", (username?: string) => {
+        if (!room && username) {
             console.log("creating room");
 
             room = genRand()
@@ -29,8 +29,8 @@ io.on("connection", (socket: Socket) => {
         }
     })
 
-    socket.on("joinroom", (username: string, roomID: string) => {
-        if (!isMaster && roomID.length == 10) {
+    socket.on("joinroom", (username?: string, roomID?: string) => {
+        if (!isMaster && roomID && roomID.length == 10) {
             if (!io.sockets.adapter.rooms.has(roomID)) {
                 return
             }
@@ -45,7 +45,7 @@ io.on("connection", (socket: Socket) => {
             console.log(io.sockets.adapter.rooms)
 
             socket.emit("joined", username, room)
-            io.in(room).emit("join", username, socket.id)
+            socket.to(room).broadcast.emit("join", username, socket.id)
         }
     })
 
@@ -71,17 +71,24 @@ io.on("connection", (socket: Socket) => {
     })
 
     socket.on("info", (...args) => {
-        io.in(room).emit("info", ...args)
+        socket.to(room).broadcast.emit("info", ...args)
     })
 
     socket.onAny((event: string, ...args) => {
         console.log(event, args);
+        const forward = (cmp: string) => {
+            if (event == cmp) io.to(room).emit(cmp)
+        }
+
+        forward("gamestart")
     })
 })
 
 /**
  * server stuff: 
  */
+// app.use(express.static(dirname(require.resolve("bulma/css/bulma.css"))))
+app.use("/webfonts", express.static(dirname(require.resolve("@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf"))))
 app.use(express.static('public'))
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"))

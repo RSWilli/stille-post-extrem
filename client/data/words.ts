@@ -6,3 +6,6 @@ export const words = [
     "Testword5",
     "Testword6",
 ]
+
+// shuffle:
+words.sort(() => Math.round(Math.random() * 2 - 1))
