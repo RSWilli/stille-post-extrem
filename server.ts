@@ -2,7 +2,7 @@ import express from 'express'
 import path, { dirname } from 'path'
 import { Server as SocketIO, Socket } from "socket.io";
 import { createServer } from "http";
-import { randomBytes } from 'crypto';
+import cryptoRandomString from 'crypto-random-string';
 
 const port = 3000
 
@@ -10,16 +10,21 @@ const app = express()
 const server = createServer(app)
 const io = new SocketIO(server)
 
-const genRand = () => randomBytes(5).toString("hex");
+const ROOMID_LENGTH = 6
+
+const genRand = () => cryptoRandomString({
+    characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    length: ROOMID_LENGTH
+});
 
 io.on("connection", (socket: Socket) => {
     let isMaster = false
     let room: string
     socket.on("createroom", (username?: string) => {
         if (!room && username) {
-            console.log("creating room");
 
             room = genRand()
+            console.log("creating room", room)
 
             socket.join(room)
 
@@ -30,7 +35,7 @@ io.on("connection", (socket: Socket) => {
     })
 
     socket.on("joinroom", (username?: string, roomID?: string) => {
-        if (!isMaster && username && roomID && roomID.length == 10) {
+        if (!isMaster && username && roomID && roomID.length == ROOMID_LENGTH) {
             if (!io.sockets.adapter.rooms.has(roomID)) {
                 return
             }

@@ -3,6 +3,12 @@ import { socket } from "../com/socket";
 import { Map } from "immutable";
 import { customStore } from "../lib/helper";
 
+export const myID = customStore<string | undefined>(undefined, store => {
+    socket.on("connect", () => {
+        store.set(socket.id)
+    })
+})
+
 export const isMaster = customStore(false, store => {
     socket.on("master", () => {
         store.set(true)
@@ -64,10 +70,14 @@ export const isGameStarted = customStore(false, store => {
     })
 })
 
-export const users = customStore(Map<string, string>(), store => {
+const users = customStore(Map<string, string>(), store => {
+
+    let id: string
+
+    myID.subscribe(v => id = v!)
 
     socket.on("joined", (username: string) => {
-        store.update(list => list.set(socket.id, username))
+        store.update(list => list.set(id, username))
     })
     socket.on("info", (username: string, sid: string) => {
         store.update(list => list.set(sid, username))
@@ -75,7 +85,7 @@ export const users = customStore(Map<string, string>(), store => {
     socket.on("join", (username: string, sid: string) => {
         store.update(list => list.set(sid, username))
 
-        socket.emit("info", get(store).get(socket.id), socket.id)
+        socket.emit("info", get(store).get(id), id)
     })
     socket.on("leave", (sid: string) => {
         store.update(list => list.delete(sid))
@@ -88,16 +98,29 @@ export const users = customStore(Map<string, string>(), store => {
     })
 })
 
-export const userList = derived(users, v => {
-    console.log(Array.from(v.keys()))
+interface User {
+    id: string
+    name: string
+    index: number
+    prev: () => string
+}
 
-    return Array.from(v.values())
+export const userList = derived(users, v => {
+    const ordered = Array.from(v.keys()).sort()
+
+    const reverseIndex = Map(ordered.map((id, i) => [id, i]))
+
+    return Array.from(v.entries()).map<User>(([id, name]) => {
+        const index = reverseIndex.get(id)!
+        return {
+            id,
+            name,
+            index,
+            prev: () => ordered[(index - 1) % ordered.length]
+        }
+    })
 })
 
-export const userOrder = derived(users, v => {
-    const entries = v.keySeq().sort()
-
-    console.log(entries)
-
-    return entries
+export const userMap = derived(userList, v => {
+    return Map(v.map(user => [user.id, user]))
 })

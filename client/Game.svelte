@@ -1,15 +1,36 @@
 <script lang="ts">
-    import { leaveRoom, startGame } from "./com/socket";
+    import { leaveRoom, socket, startGame } from "./com/socket";
+    import { colors } from "./data/colors";
     import Draw from "./Draw.svelte";
+    import { roundMode, roundTimer, word } from "./store/game";
 
     import {
         currentRoom,
         isGameStarted,
         isMaster,
         userList,
+        userMap,
     } from "./store/main";
 
     let getData: () => string;
+
+    let mycolor = "red";
+
+    const mode = $roundMode;
+
+    userMap.subscribe((users) => {
+        mycolor = colors[users.get(socket.id)?.index ?? 0];
+    });
+
+    roundTimer.subscribe((time) => {
+        if (time == 0) {
+            if (mode == "draw") {
+                const img = getData();
+            } else if (mode == "text") {
+                //TODO
+            }
+        }
+    });
 </script>
 
 <div id="container">
@@ -28,7 +49,7 @@
     <aside class="content">
         <ul>
             {#each $userList as user}
-                <li>{user}</li>
+                <li style="color: {colors[user.index]};">{user.name}</li>
             {/each}
         </ul>
     </aside>
@@ -45,11 +66,11 @@
             {/if}
         </main>
     {:else}
-        <main
-            class="is-flex is-flex-direction-column is-justify-content-stretch"
-        >
-            <Draw bind:getImageData={getData} />
-        </main>
+        <Draw bind:getImageData={getData} color={mycolor} className="draw" />
+        <span class="countdown is-3">{$roundTimer}</span>
+        {#if mode == "draw"}
+            <span class="write is-2">{$word.toUpperCase()}</span>
+        {/if}
     {/if}
 </div>
 
@@ -63,8 +84,12 @@
         grid-template-columns: auto 1fr 80px;
         grid-template-areas:
             "room header leave"
-            "userlist main main"
-            "userlist main main";
+            "userlist write countdown"
+            "userlist draw draw";
+
+        & :global(.draw) {
+            grid-area: draw;
+        }
     }
 
     aside {
@@ -82,6 +107,15 @@
     }
 
     main {
-        grid-area: main;
+        grid-area: write / write / draw / draw;
+    }
+
+    .countdown {
+        grid-area: countdown;
+        place-self: center;
+    }
+
+    .write {
+        grid-area: write;
     }
 </style>

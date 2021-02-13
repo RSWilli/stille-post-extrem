@@ -1,4 +1,5 @@
-export const words = [
+// thanks to https://github.com/scribble-rs/scribble.rs/blob/master/resources/words/de
+const words = [
     "abdeckung",
     "abend",
     "abendessen",
@@ -5366,4 +5367,8 @@ export const words = [
     "übung",
 ]
 
-// words.sort(() => Math.round(Math.random() * 2 - 1))
+words.sort(() => Math.round(Math.random() * 2 - 1))
+
+export const randomWord = () => {
+    return words[Math.round(Math.random() * words.length)]
+}

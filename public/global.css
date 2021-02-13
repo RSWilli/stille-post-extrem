@@ -5,7 +5,7 @@ html, body {
 }
 
 html {
-	overflow-y: auto;
+	overflow: hidden;
 }
 
 body {

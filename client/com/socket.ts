@@ -17,3 +17,4 @@ export const leaveRoom = () => {
 export const startGame = () => {
     socket.emit("gamestart")
 }
+
