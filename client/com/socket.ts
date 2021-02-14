@@ -3,18 +3,27 @@ import { io } from "socket.io-client";
 export const socket = io()
 
 export const createRoom = (username: string) => {
-    socket.emit("createroom", username)
+    socket.emit("lobby:create", username)
 }
 
 export const joinRoom = (username: string, room: string) => {
-    socket.emit("joinroom", username, room)
+    socket.emit("lobby:join", username, room)
 }
 
 export const leaveRoom = () => {
-    socket.emit("leaveroom")
+    socket.emit("lobby:leave")
 }
 
 export const startGame = () => {
-    socket.emit("gamestart")
+    socket.emit("game:start")
+}
+
+export interface RoundData {
+    type: "text" | "draw"
+    data: string
+}
+
+export const sendData = (id: string, data: RoundData) => {
+    socket.emit("game:data", id, data)
 }
 

@@ -10,13 +10,10 @@ export const myID = customStore<string | undefined>(undefined, store => {
 })
 
 export const isMaster = customStore(false, store => {
-    socket.on("master", () => {
+    socket.on("lobby:master", () => {
         store.set(true)
     })
-    socket.on("gameend", () => {
-        store.set(false)
-    })
-    socket.on("quit", () => {
+    socket.on("lobby:quit", () => {
         store.set(false)
     })
     socket.on("disconnect", () => {
@@ -26,13 +23,13 @@ export const isMaster = customStore(false, store => {
 
 export const currentRoom = customStore<string | undefined>(undefined, (store) => {
 
-    socket.on("master", (id: string) => {
+    socket.on("lobby:master", (id: string) => {
         store.set(id)
     })
-    socket.on("joined", (username: string, roomid: string) => {
+    socket.on("lobby:joined", (username: string, roomid: string) => {
         store.set(roomid)
     })
-    socket.on("quit", () => {
+    socket.on("lobby:quit", () => {
         store.set(undefined)
     })
     socket.on("disconnect", () => {
@@ -41,13 +38,13 @@ export const currentRoom = customStore<string | undefined>(undefined, (store) =>
 })
 
 export const isInLobby = customStore(false, store => {
-    socket.on("master", () => {
+    socket.on("lobby:master", () => {
         store.set(true)
     })
-    socket.on("joined", () => {
+    socket.on("lobby:joined", () => {
         store.set(true)
     })
-    socket.on("quit", () => {
+    socket.on("lobby:quit", () => {
         store.set(false)
     })
     socket.on("disconnect", () => {
@@ -56,13 +53,13 @@ export const isInLobby = customStore(false, store => {
 })
 
 export const isGameStarted = customStore(false, store => {
-    socket.on("gamestart", () => {
+    socket.on("game:start", () => {
         store.set(true)
     })
-    socket.on("gameend", () => {
+    socket.on("game:end", () => {
         store.set(false)
     })
-    socket.on("quit", () => {
+    socket.on("lobby:quit", () => {
         store.set(false)
     })
     socket.on("disconnect", () => {
@@ -76,21 +73,21 @@ const users = customStore(Map<string, string>(), store => {
 
     myID.subscribe(v => id = v!)
 
-    socket.on("joined", (username: string) => {
+    socket.on("lobby:joined", (username: string) => {
         store.update(list => list.set(id, username))
     })
-    socket.on("info", (username: string, sid: string) => {
+    socket.on("lobby:info", (username: string, sid: string) => {
         store.update(list => list.set(sid, username))
     })
-    socket.on("join", (username: string, sid: string) => {
+    socket.on("lobby:join", (username: string, sid: string) => {
         store.update(list => list.set(sid, username))
 
-        socket.emit("info", get(store).get(id), id)
+        socket.emit("lobby:info", get(store).get(id), id)
     })
-    socket.on("leave", (sid: string) => {
+    socket.on("lobby:leave", (sid: string) => {
         store.update(list => list.delete(sid))
     })
-    socket.on("quit", () => {
+    socket.on("lobby:quit", () => {
         store.set(Map())
     })
     socket.on("disconnect", () => {
@@ -103,6 +100,7 @@ interface User {
     name: string
     index: number
     prev: () => string
+    next: () => string
 }
 
 export const userList = derived(users, v => {
@@ -116,7 +114,8 @@ export const userList = derived(users, v => {
             id,
             name,
             index,
-            prev: () => ordered[(index - 1) % ordered.length]
+            prev: () => ordered[(index - 1) % ordered.length],
+            next: () => ordered[(index + 1) % ordered.length],
         }
     })
 })

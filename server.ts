@@ -20,7 +20,7 @@ const genRand = () => cryptoRandomString({
 io.on("connection", (socket: Socket) => {
     let isMaster = false
     let room: string
-    socket.on("createroom", (username?: string) => {
+    socket.on("lobby:create", (username?: string) => {
         if (!room && username) {
 
             room = genRand()
@@ -28,13 +28,13 @@ io.on("connection", (socket: Socket) => {
 
             socket.join(room)
 
-            socket.emit("master", room)
-            io.in(room).emit("join", username, socket.id)
+            socket.emit("lobby:master", room)
+            io.in(room).emit("lobby:join", username, socket.id)
             isMaster = true
         }
     })
 
-    socket.on("joinroom", (username?: string, roomID?: string) => {
+    socket.on("lobby:join", (username?: string, roomID?: string) => {
         if (!isMaster && username && roomID && roomID.length == ROOMID_LENGTH) {
             if (!io.sockets.adapter.rooms.has(roomID)) {
                 return
@@ -49,43 +49,40 @@ io.on("connection", (socket: Socket) => {
 
             console.log(io.sockets.adapter.rooms)
 
-            socket.emit("joined", username, room)
-            socket.to(room).broadcast.emit("join", username, socket.id)
+            socket.emit("lobby:joined", username, room)
+            socket.to(room).broadcast.emit("lobby:join", username, socket.id)
         }
     })
 
-    socket.on("leaveroom", () => {
+    socket.on("lobby:leave", () => {
         if (room) {
             if (isMaster) {
-                io.in(room).emit("quit")
+                io.in(room).emit("lobby:quit")
             } else {
-                io.in(room).emit("leave", socket.id)
+                io.in(room).emit("lobby:leave", socket.id)
             }
         }
-        socket.emit("quit")
+        socket.emit("lobby:quit")
     })
 
     socket.on("disconnect", () => {
         if (room) {
             if (isMaster) {
-                io.in(room).emit("quit")
+                io.in(room).emit("lobby:quit")
             } else {
-                io.in(room).emit("leave", socket.id)
+                io.in(room).emit("lobby:leave", socket.id)
             }
         }
     })
 
-    socket.on("info", (...args) => {
-        socket.to(room).broadcast.emit("info", ...args)
+    socket.on("lobby:info", (...args) => {
+        socket.to(room).broadcast.emit("lobby:info", ...args)
     })
 
     socket.onAny((event: string, ...args) => {
-        console.log(event, args);
-        const forward = (cmp: string) => {
-            if (event == cmp) io.to(room).emit(cmp)
+        if (/^game:.*/.test(event)) {
+            io.to(room).emit(event)
         }
-
-        forward("gamestart")
     })
 })
 
