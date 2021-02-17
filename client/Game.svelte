@@ -1,31 +1,26 @@
 <script lang="ts">
-    import { leaveRoom, socket, startGame } from "./com/socket";
+    import { leaveRoom, shuffleLobby, startGame } from "./com/actions";
     import { colors } from "./data/colors";
     import Draw from "./Draw.svelte";
-    import { roundMode, roundTimer, word } from "./store/game";
+    import { myColor, roundMode, roundTimer } from "./store/game";
 
     import {
         currentRoom,
+        getUserIndex,
         isGameStarted,
         isMaster,
         userList,
-        userMap,
     } from "./store/main";
 
     let getData: () => string;
 
-    let mycolor = "red";
-
     const mode = $roundMode;
-
-    userMap.subscribe((users) => {
-        mycolor = colors[users.get(socket.id)?.index ?? 0];
-    });
 
     roundTimer.subscribe((time) => {
         if (time == 0) {
             if (mode == "draw") {
                 const img = getData();
+                // TODO
             } else if (mode == "text") {
                 //TODO
             }
@@ -47,9 +42,16 @@
         </span>
     </button>
     <aside class="content">
+        {#if !$isGameStarted && $isMaster}
+            <button class="button is-primary" on:click={() => shuffleLobby()}
+                >Shuffle Players</button
+            >
+        {/if}
         <ul>
             {#each $userList as user}
-                <li style="color: {colors[user.index]};">{user.name}</li>
+                <li style="color: {colors[$getUserIndex(user.id)]};">
+                    {user.username}
+                </li>
             {/each}
         </ul>
     </aside>
@@ -66,10 +68,12 @@
             {/if}
         </main>
     {:else}
-        <Draw bind:getImageData={getData} color={mycolor} className="draw" />
+        <Draw bind:getImageData={getData} color={$myColor} className="draw" />
         <span class="countdown is-3">{$roundTimer}</span>
         {#if mode == "draw"}
-            <span class="write is-2">{$word.toUpperCase()}</span>
+            TODO
+        {:else}
+            <input type="text" class="write" />
         {/if}
     {/if}
 </div>

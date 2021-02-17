@@ -1,9 +1,11 @@
 import { List, Map } from "immutable";
-import { get } from "svelte/store";
-import { RoundData, sendData, socket } from "../com/socket";
+import { derived, get } from "svelte/store";
+import { RoundData, sendData } from "../com/actions";
+import { socket } from "../com/socket";
+import { colors } from "../data/colors";
 import { randomWord } from "../data/words";
 import { customStore } from "../lib/helper";
-import { myID, userMap } from "./main";
+import { getUserIndex, myID } from "./main";
 
 export const roundMode = customStore<"text" | "draw">("draw", store => {
     socket.on("game:start", () => {
@@ -54,4 +56,12 @@ export const gameData = customStore<Map<string, List<RoundData>>>(Map(), store =
             l => l.push(data)
         ))
     })
+})
+
+export const blocks = derived(gameData, data => {
+
+})
+
+export const myColor = derived(getUserIndex, getIndex => {
+    return colors[getIndex(get(myID)!) ?? 0];
 })

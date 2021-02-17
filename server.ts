@@ -20,37 +20,29 @@ const genRand = () => cryptoRandomString({
 io.on("connection", (socket: Socket) => {
     let isMaster = false
     let room: string
-    socket.on("lobby:create", (username?: string) => {
-        if (!room && username) {
+    socket.on("lobby:create", () => {
+        if (!room) {
 
             room = genRand()
-            console.log("creating room", room)
-
             socket.join(room)
 
             socket.emit("lobby:master", room)
-            io.in(room).emit("lobby:join", username, socket.id)
+            socket.emit("lobby:join", room)
             isMaster = true
+        } else {
+            socket.emit("lobby:quit")
         }
     })
 
-    socket.on("lobby:join", (username?: string, roomID?: string) => {
-        if (!isMaster && username && roomID && roomID.length == ROOMID_LENGTH) {
-            if (!io.sockets.adapter.rooms.has(roomID)) {
-                return
-            }
-
-            console.log(socket.id)
-
-            console.log(io.sockets.adapter.rooms)
+    socket.on("lobby:join", (roomID?: string) => {
+        if (!isMaster && roomID && roomID.length == ROOMID_LENGTH && io.sockets.adapter.rooms.has(roomID)) {
 
             room = roomID
             socket.join(room)
 
-            console.log(io.sockets.adapter.rooms)
-
-            socket.emit("lobby:joined", username, room)
-            socket.to(room).broadcast.emit("lobby:join", username, socket.id)
+            io.to(room).emit("lobby:join")
+        } else {
+            socket.emit("lobby:quit")
         }
     })
 
@@ -75,13 +67,15 @@ io.on("connection", (socket: Socket) => {
         }
     })
 
-    socket.on("lobby:info", (...args) => {
-        socket.to(room).broadcast.emit("lobby:info", ...args)
-    })
-
     socket.onAny((event: string, ...args) => {
-        if (/^game:.*/.test(event)) {
-            io.to(room).emit(event)
+        const forwardToAll = [
+            /game:.*/,
+            /lobby:info/,
+            /lobby:shuffle/,
+        ]
+
+        if (forwardToAll.some(reg => reg.test(event))) {
+            io.to(room).emit(event, ...args)
         }
     })
 })

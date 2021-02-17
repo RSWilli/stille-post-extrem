@@ -1,18 +1,18 @@
 <script lang="ts">
-    import { createRoom, joinRoom } from "./com/socket";
+    import { createRoom, joinRoom } from "./com/actions";
+    import { username } from "./store/main";
 
-    let username: string;
     let room: string;
 
     const joinRoomHandler = () => {
-        if (username != "" && room != "") {
-            joinRoom(username, room);
+        if ($username != "" && room != "") {
+            joinRoom(room);
         }
     };
 
     const createRoomHandler = () => {
-        if (username != "") {
-            createRoom(username);
+        if ($username != "") {
+            createRoom();
         }
     };
 </script>
@@ -28,7 +28,7 @@
                 class="input"
                 type="text"
                 placeholder="Username"
-                bind:value={username}
+                bind:value={$username}
             />
         </div>
     </div>

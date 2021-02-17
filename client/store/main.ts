@@ -1,7 +1,9 @@
-import { derived, get } from "svelte/store";
-import { socket } from "../com/socket";
+import { derived, get, writable } from "svelte/store";
+import { sendInfo, User } from "../com/actions";
 import { Map } from "immutable";
-import { customStore } from "../lib/helper";
+import { customStore, customWritableStore } from "../lib/helper";
+import sortBy from "lodash.sortby";
+import { socket } from "../com/socket";
 
 export const myID = customStore<string | undefined>(undefined, store => {
     socket.on("connect", () => {
@@ -9,10 +11,9 @@ export const myID = customStore<string | undefined>(undefined, store => {
     })
 })
 
-export const isMaster = customStore(false, store => {
-    socket.on("lobby:master", () => {
-        store.set(true)
-    })
+export const username = writable("")
+
+export const isMaster = customWritableStore(false, store => {
     socket.on("lobby:quit", () => {
         store.set(false)
     })
@@ -21,13 +22,9 @@ export const isMaster = customStore(false, store => {
     })
 })
 
-export const currentRoom = customStore<string | undefined>(undefined, (store) => {
-
-    socket.on("lobby:master", (id: string) => {
-        store.set(id)
-    })
-    socket.on("lobby:joined", (username: string, roomid: string) => {
-        store.set(roomid)
+export const currentRoom = customWritableStore<string | undefined>(undefined, (store) => {
+    socket.on("lobby:master", (room: string) => {
+        store.set(room)
     })
     socket.on("lobby:quit", () => {
         store.set(undefined)
@@ -37,13 +34,7 @@ export const currentRoom = customStore<string | undefined>(undefined, (store) =>
     })
 })
 
-export const isInLobby = customStore(false, store => {
-    socket.on("lobby:master", () => {
-        store.set(true)
-    })
-    socket.on("lobby:joined", () => {
-        store.set(true)
-    })
+export const isInLobby = customWritableStore(false, store => {
     socket.on("lobby:quit", () => {
         store.set(false)
     })
@@ -67,22 +58,31 @@ export const isGameStarted = customStore(false, store => {
     })
 })
 
-const users = customStore(Map<string, string>(), store => {
+export const myIndex = customStore(Math.random(), store => {
+    socket.on("lobby:shuffle", () => {
 
-    let id: string
+        const newindex = Math.random()
+        store.set(newindex)
 
-    myID.subscribe(v => id = v!)
-
-    socket.on("lobby:joined", (username: string) => {
-        store.update(list => list.set(id, username))
+        sendInfo({
+            id: get(myID)!,
+            username: get(username),
+            index: get(myIndex)
+        })
     })
-    socket.on("lobby:info", (username: string, sid: string) => {
-        store.update(list => list.set(sid, username))
-    })
-    socket.on("lobby:join", (username: string, sid: string) => {
-        store.update(list => list.set(sid, username))
+})
 
-        socket.emit("lobby:info", get(store).get(id), id)
+export const users = customStore(Map<string, User>(), store => {
+
+    socket.on("lobby:info", (data: User) => {
+        store.update(list => list.set(data.id, data))
+    })
+    socket.on("lobby:join", () => {
+        sendInfo({
+            id: get(myID)!,
+            username: get(username),
+            index: get(myIndex)
+        })
     })
     socket.on("lobby:leave", (sid: string) => {
         store.update(list => list.delete(sid))
@@ -95,31 +95,14 @@ const users = customStore(Map<string, string>(), store => {
     })
 })
 
-interface User {
-    id: string
-    name: string
-    index: number
-    prev: () => string
-    next: () => string
-}
-
 export const userList = derived(users, v => {
-    const ordered = Array.from(v.keys()).sort()
+    const users = Array.from(v.values())
 
-    const reverseIndex = Map(ordered.map((id, i) => [id, i]))
-
-    return Array.from(v.entries()).map<User>(([id, name]) => {
-        const index = reverseIndex.get(id)!
-        return {
-            id,
-            name,
-            index,
-            prev: () => ordered[(index - 1) % ordered.length],
-            next: () => ordered[(index + 1) % ordered.length],
-        }
-    })
+    return sortBy(users, u => u.index)
 })
 
-export const userMap = derived(userList, v => {
-    return Map(v.map(user => [user.id, user]))
+export const getUserIndex = derived(userList, v => {
+    const users = Map(v.map((v, i) => [v.id, i]))
+
+    return (id: string) => users.get(id)!
 })
