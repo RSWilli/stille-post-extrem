@@ -30,8 +30,8 @@ export interface RoundData {
     data: string
 }
 
-export const sendData = (id: string, data: RoundData) => {
-    socket.emit("game:data", id, data)
+export const sendData = (data: RoundData) => {
+    socket.emit("game:data", socket.id, data)
 }
 
 export interface User {
@@ -41,6 +41,7 @@ export interface User {
      * random index for ordering
      */
     index: number
+    color: string
 }
 
 export const sendInfo = (data: User) => {

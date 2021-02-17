@@ -4,6 +4,7 @@ import { Map } from "immutable";
 import { customStore, customWritableStore } from "../lib/helper";
 import sortBy from "lodash.sortby";
 import { socket } from "../com/socket";
+import { colors } from "../data/colors";
 
 export const myID = customStore<string | undefined>(undefined, store => {
     socket.on("connect", () => {
@@ -58,7 +59,7 @@ export const isGameStarted = customStore(false, store => {
     })
 })
 
-export const myIndex = customStore(Math.random(), store => {
+const myIndex = customStore(Math.random(), store => {
     socket.on("lobby:shuffle", () => {
 
         const newindex = Math.random()
@@ -67,10 +68,13 @@ export const myIndex = customStore(Math.random(), store => {
         sendInfo({
             id: get(myID)!,
             username: get(username),
-            index: get(myIndex)
+            index: get(myIndex),
+            color: myColor
         })
     })
 })
+
+export const myColor = colors[Math.round(Math.random() * colors.length)]
 
 export const users = customStore(Map<string, User>(), store => {
 
@@ -81,7 +85,8 @@ export const users = customStore(Map<string, User>(), store => {
         sendInfo({
             id: get(myID)!,
             username: get(username),
-            index: get(myIndex)
+            index: get(myIndex),
+            color: myColor
         })
     })
     socket.on("lobby:leave", (sid: string) => {
@@ -104,5 +109,5 @@ export const userList = derived(users, v => {
 export const getUserIndex = derived(userList, v => {
     const users = Map(v.map((v, i) => [v.id, i]))
 
-    return (id: string) => users.get(id)!
+    return (id: string) => users.get(id) ?? 0
 })

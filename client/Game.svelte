@@ -1,28 +1,43 @@
 <script lang="ts">
-    import { leaveRoom, shuffleLobby, startGame } from "./com/actions";
-    import { colors } from "./data/colors";
+    import type { RoundData } from "./com/actions";
+    import {
+        leaveRoom,
+        sendData,
+        shuffleLobby,
+        startGame,
+    } from "./com/actions";
     import Draw from "./Draw.svelte";
-    import { myColor, roundMode, roundTimer } from "./store/game";
+    import { currentData, roundTimer } from "./store/game";
 
     import {
         currentRoom,
-        getUserIndex,
         isGameStarted,
         isMaster,
+        myColor,
         userList,
     } from "./store/main";
 
     let getData: () => string;
 
-    const mode = $roundMode;
+    let data: RoundData | undefined = undefined;
+
+    currentData.subscribe((d) => (data = d));
+
+    let word: string;
 
     roundTimer.subscribe((time) => {
-        if (time == 0) {
-            if (mode == "draw") {
+        if (time == 0 && data) {
+            if (data.type == "text") {
                 const img = getData();
-                // TODO
-            } else if (mode == "text") {
-                //TODO
+                sendData({
+                    type: "draw",
+                    data: img,
+                });
+            } else if (data.type == "draw") {
+                sendData({
+                    data: word,
+                    type: "text",
+                });
             }
         }
     });
@@ -49,7 +64,7 @@
         {/if}
         <ul>
             {#each $userList as user}
-                <li style="color: {colors[$getUserIndex(user.id)]};">
+                <li style="color: {user.color};">
                     {user.username}
                 </li>
             {/each}
@@ -68,13 +83,20 @@
             {/if}
         </main>
     {:else}
-        <Draw bind:getImageData={getData} color={$myColor} className="draw" />
-        <span class="countdown is-3">{$roundTimer}</span>
-        {#if mode == "draw"}
-            TODO
+        {#if data != undefined}
+            {#if data.type == "text"}
+                <div class="draw">
+                    <Draw bind:getImageData={getData} color={myColor} />
+                </div>
+                <span class="write">{data.data}</span>
+            {:else}
+                <input type="text" class="write" bind:value={word} />
+                <img src={data.data} alt="Describe this!" />
+            {/if}
         {:else}
-            <input type="text" class="write" />
+            {$currentData}
         {/if}
+        <span class="countdown is-3">{$roundTimer}</span>
     {/if}
 </div>
 
@@ -90,10 +112,6 @@
             "room header leave"
             "userlist write countdown"
             "userlist draw draw";
-
-        & :global(.draw) {
-            grid-area: draw;
-        }
     }
 
     aside {
@@ -121,5 +139,12 @@
 
     .write {
         grid-area: write;
+    }
+
+    .draw {
+        grid-area: draw;
+        position: relative;
+        height: 100%;
+        width: 100%;
     }
 </style>

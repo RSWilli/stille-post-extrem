@@ -75,6 +75,8 @@ io.on("connection", (socket: Socket) => {
         ]
 
         if (forwardToAll.some(reg => reg.test(event))) {
+            console.log(`forwarding: ${event}`);
+
             io.to(room).emit(event, ...args)
         }
     })

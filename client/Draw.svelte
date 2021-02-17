@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    export let className = "";
     export let color = "red";
     let canvas: HTMLCanvasElement;
     let height: number | undefined;
@@ -56,7 +55,7 @@
     };
 </script>
 
-<div class={className} bind:offsetHeight={height} bind:offsetWidth={width}>
+<div bind:offsetHeight={height} bind:offsetWidth={width}>
     <canvas
         on:mousemove={handleDraw}
         on:mouseup={stopDraw}
@@ -76,9 +75,6 @@
     div {
         border: 1px solid black;
         position: relative;
-    }
-
-    canvas {
         width: 100%;
         height: 100%;
     }
